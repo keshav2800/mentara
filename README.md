@@ -32,37 +32,57 @@ pnpm add mentara @mysten/sui
 
 ## Quick start
 
+Instantiate one client with your Sui client and your deployment addresses, then use the namespaced modules: `client.state`, `client.pool`, `client.partner`, `client.creator`, `client.migration`.
+
 ```ts
 import { SuiClient } from '@mysten/sui/client';
-import {
-  getPoolState, getLaunchConfig, currentFeeNum, curveBaseOut,
-  ceilFeeRaw, buildBuyTx, type MentaraAddresses,
-} from 'mentara';
+import { MentaraClient } from 'mentara';
 
-const client = new SuiClient({ url: 'https://fullnode.mainnet.sui.io:443' });
+const sui = new SuiClient({ url: 'https://fullnode.mainnet.sui.io:443' });
 
-// Your published Mentara deployment.
-const addr: MentaraAddresses = {
+// Point the SDK at the Mentara instance you published.
+const mentara = new MentaraClient(sui, {
   packageId: '0x...',
   registryId: '0x...',
-};
-
-// Quote a buy with exact curve math (so slippage floors are correct).
-const state = await getPoolState(client, poolId);
-const cfg = await getLaunchConfig(client, state.configId!);
-const feeNum = currentFeeNum(cfg, state.activationMs, Date.now(), state.swapCount === 0);
-const amountRaw = 10_000_000n; // 10 units at 6 decimals
-const net = amountRaw - ceilFeeRaw(amountRaw, feeNum);
-const capacity = Number(cfg.thresholdRaw - state.quoteReserve);
-const tokensOut = curveBaseOut(cfg.segments, state.sqrtPrice, Number(net), capacity);
-
-// Build the buy transaction (sign and execute with your wallet or a sponsor).
-const tx = await buildBuyTx({
-  addr, client, sender, venue: 'curve',
-  poolOrAmmId: poolId, configId: state.configId, coinType, quoteType: cfg.quoteType,
-  amountRaw, minTokensRaw: BigInt(Math.floor(tokensOut * 0.95)),
 });
+
+// Read live state and quote a buy with exact curve math.
+const state = await mentara.state.getPool(poolId);
+const config = await mentara.state.getConfig(state.configId!);
+const quote = mentara.pool.swapQuote({ state, config, amountInRaw: 10_000_000n, isBuy: true });
+
+// Build the buy with a 5% slippage floor in one call.
+const tx = await mentara.pool.buyWithSlippage({
+  sender, poolOrAmmId: poolId, state, config,
+  coinType, quoteType: config.quoteType, amountRaw: 10_000_000n,
+});
+// sign + execute tx with a wallet or a sponsor
 ```
+
+Other namespaces:
+
+```ts
+// Launchpad operator: create a reusable config from human tokenomics.
+const cfgTx = mentara.partner.createConfig({
+  quoteType, partnerFeeClaimer, leftoverReceiver,
+  totalSupply: 500_000, tokenDecimals: 6,
+  thresholdQuote: 500, priceRun: 15,
+  creatorLpFeePct: 50, migrationFeePct: 5, creatorMigrationFeePct: 50,
+  ammFeeNum: 10_000_000, // 1%
+  feeMode: 1, cliffFeeNum: 500_000_000, periodMs: 60_000, feeReduction: 49_000_000,
+  nPeriods: 10, firstSwapMinFee: true,
+});
+
+// Creator: publish a coin, open its pool, claim earnings.
+const publishTx = mentara.creator.publishCoin(template, { ticker: 'MOON', name: 'Moon', description: '', iconUrl });
+const poolTx = mentara.creator.createPool({ configId, treasuryCapId, creator, coinType, quoteType });
+const claimTx = mentara.creator.claimTradingFee({ sender: creator, coinType, quoteType, poolId, ammId });
+
+// Anyone: graduate a completed curve into its AMM.
+const migrateTx = mentara.migration.migrate({ poolId, configId, coinType, quoteType });
+```
+
+The standalone functions (`getPoolState`, `buildBuyTx`, `curveBaseOut`, `solveSingleSegmentCurve`, ...) are also exported if you prefer them over the client.
 
 ## Status
 

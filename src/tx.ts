@@ -157,6 +157,37 @@ export function buildClaimCreatorFeeTx(args: {
   return tx;
 }
 
+/** Claim the partner (launchpad) accrued fees from the curve and/or the AMM. */
+export function buildClaimPartnerFeeTx(args: {
+  addr: MentaraAddresses;
+  sender: string;
+  coinType: string;
+  quoteType: string;
+  poolId?: string | null;
+  configId?: string | null; // required if poolId is given (curve claim needs the config)
+  ammId?: string | null;
+}): Transaction {
+  const m = mods(args.addr);
+  const tx = new Transaction();
+  tx.setSender(args.sender);
+  if (args.poolId) {
+    if (!args.configId) throw new Error('configId required to claim partner fee from the curve');
+    tx.moveCall({
+      target: `${args.addr.packageId}::${m.pool}::claim_partner_fee`,
+      typeArguments: [args.coinType, args.quoteType],
+      arguments: [tx.object(args.poolId), tx.object(args.configId)],
+    });
+  }
+  if (args.ammId) {
+    tx.moveCall({
+      target: `${args.addr.packageId}::${m.amm}::claim_partner_fee`,
+      typeArguments: [args.coinType, args.quoteType],
+      arguments: [tx.object(args.ammId)],
+    });
+  }
+  return tx;
+}
+
 /** Migrate a completed curve into its AMM (permissionless crank). */
 export function buildMigrateTx(args: {
   addr: MentaraAddresses;
