@@ -1,0 +1,36 @@
+{
+  "name": "mentara",
+  "version": "0.1.0",
+  "description": "Mentara: a dynamic bonding curve launch protocol and SDK for Sui. The brain that powers token launchpads.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src", "move", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": ["sui", "bonding-curve", "launchpad", "defi", "meteora", "token", "amm"],
+  "author": "MS Mind Labs",
+  "license": "MIT",
+  "homepage": "https://mentara.dev",
+  "dependencies": {
+    "@mysten/move-bytecode-template": "^0.4.0"
+  },
+  "peerDependencies": {
+    "@mysten/sui": "^1.30.0"
+  },
+  "devDependencies": {
+    "@mysten/sui": "^1.30.0",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  }
+}

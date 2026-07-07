@@ -1,0 +1,7 @@
+[package]
+name = "hunchbook_launchpad"
+edition = "2024.beta"
+version = "0.0.1"
+
+[addresses]
+hunchbook_launchpad = "0x0"
