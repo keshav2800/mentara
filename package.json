@@ -7,10 +7,13 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    "./math": { "types": "./dist/math.d.ts", "import": "./dist/math.js" },
+    "./read": { "types": "./dist/read.d.ts", "import": "./dist/read.js" },
+    "./tx": { "types": "./dist/tx.d.ts", "import": "./dist/tx.js" },
+    "./coin": { "types": "./dist/coin.d.ts", "import": "./dist/coin.js" },
+    "./client": { "types": "./dist/client.d.ts", "import": "./dist/client.js" },
+    "./types": { "types": "./dist/types.d.ts", "import": "./dist/types.js" }
   },
   "files": ["dist", "src", "move", "README.md"],
   "scripts": {
