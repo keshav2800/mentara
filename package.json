@@ -22,7 +22,10 @@
     "prepublishOnly": "pnpm build"
   },
   "keywords": ["sui", "bonding-curve", "launchpad", "defi", "meteora", "token", "amm"],
-  "author": "MS Mind Labs",
+  "author": {
+    "name": "MS Mind Labs",
+    "url": "https://msmindlabs.com"
+  },
   "license": "MIT",
   "homepage": "https://mentara.dev",
   "dependencies": {

@@ -2,7 +2,7 @@
 
 A dynamic bonding curve launch protocol and SDK for [Sui](https://sui.io). Mentara is the engine that powers token launchpads: launch a real coin, trade it on a bonding curve, graduate it to an automated market maker, and split the fees between the creator and the launchpad. Modeled on Meteora's Dynamic Bonding Curve, built for Sui.
 
-Mentara is built by MS Mind Labs and powers [Hunchbook](https://hunchbook.xyz), the first launchpad built on it.
+Mentara is built by [MS Mind Labs](https://msmindlabs.com) and powers [Hunchbook](https://hunchbook.xyz), the first launchpad built on it.
 
 ## What it does
 
