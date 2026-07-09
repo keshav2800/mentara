@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # Pinned to the exact release the Move test suite is verified against —
+  # bump deliberately, not silently via "latest".
+  SUI_CLI_VERSION: testnet-v1.74.1
+
+jobs:
+  move:
+    name: Move (build + unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache sui CLI
+        id: cache-sui
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin/sui
+          key: sui-cli-${{ env.SUI_CLI_VERSION }}-ubuntu-x86_64
+
+      - name: Install sui CLI
+        if: steps.cache-sui.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local/bin
+          curl -sL -o /tmp/sui.tgz \
+            "https://github.com/MystenLabs/sui/releases/download/${SUI_CLI_VERSION}/sui-${SUI_CLI_VERSION}-ubuntu-x86_64.tgz"
+          mkdir -p /tmp/sui-extract
+          tar -xzf /tmp/sui.tgz -C /tmp/sui-extract
+          # The release tarball bundles multiple binaries (sui-node, sui-faucet, ...) —
+          # find the CLI itself rather than assume its exact path in the archive.
+          find /tmp/sui-extract -type f -name sui -perm -u+x -exec cp {} ~/.local/bin/sui \;
+          chmod +x ~/.local/bin/sui
+
+      - name: Add sui CLI to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: sui --version
+
+      - name: Build coin_template
+        working-directory: move/coin_template
+        run: sui move build
+
+      - name: Test hunchbook_launchpad
+        working-directory: move/hunchbook_launchpad
+        run: sui move test
+
+  sdk:
+    name: TypeScript SDK (typecheck + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
